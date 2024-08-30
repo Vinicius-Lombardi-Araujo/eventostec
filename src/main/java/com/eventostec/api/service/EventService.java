@@ -26,10 +26,12 @@ public class EventService {
     @Value("${aws.bucket.name}")
     private String bucketName;
 
+    private AddressService addressService;
     private EventRepository eventRepository;
     private AmazonS3 s3Client;
 
-    public EventService(EventRepository eventRepository, AmazonS3 s3Client) {
+    public EventService(AddressService addressService, EventRepository eventRepository, AmazonS3 s3Client) {
+        this.addressService = addressService;
         this.eventRepository = eventRepository;
         this.s3Client = s3Client;
     }
@@ -49,12 +51,34 @@ public class EventService {
         newEvent.setRemote(data.remote());
         newEvent.setImgUrl(imgUrl);
 
-        return this.eventRepository.save(newEvent);
+        this.eventRepository.save(newEvent);
+
+        if(!data.remote()) {
+            this.addressService.createAddress(data, newEvent);
+        }
+
+        return newEvent;
     }
 
     public List<EventResponseDTO> getUpcomingEvents(int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
         Page<Event> eventsPage = this.eventRepository.findUpcomingEvents(new Date(), pageable);
+        return eventsPage.map(event -> new EventResponseDTO(event.getId(),
+                        event.getTitle(),
+                        event.getDescription(),
+                        event.getDate(),
+                        "",
+                        "",
+                        event.getRemote(),
+                        event.getEventUrl(),
+                        event.getImgUrl()))
+                .stream()
+                .toList();
+    }
+
+    public List<EventResponseDTO> getFilteredEvents(int page, int size, String title, String city, String uf, Date startDate, Date endDate) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Event> eventsPage = this.eventRepository.findFilteredEvents(new Date(), title, city, uf, startDate, endDate, pageable);
         return eventsPage.map(event -> new EventResponseDTO(event.getId(),
                         event.getTitle(),
                         event.getDescription(),
