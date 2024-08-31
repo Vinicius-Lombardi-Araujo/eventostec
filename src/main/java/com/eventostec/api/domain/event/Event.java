@@ -26,4 +26,6 @@ public class Event {
     private String eventUrl;
     private Boolean remote;
     private Date date;
+    @OneToOne(mappedBy = "event", cascade = CascadeType.ALL)
+    private Address address;
 }
