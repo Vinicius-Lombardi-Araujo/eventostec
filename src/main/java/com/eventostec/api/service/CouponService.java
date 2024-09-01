@@ -3,6 +3,7 @@ package com.eventostec.api.service;
 import com.eventostec.api.dto.CouponRequestDTO;
 import com.eventostec.api.domain.coupon.Coupon;
 import com.eventostec.api.domain.event.Event;
+import com.eventostec.api.dto.CouponResponseDTO;
 import com.eventostec.api.repositories.CouponRepository;
 import com.eventostec.api.repositories.EventRepository;
 import org.springframework.stereotype.Service;
@@ -22,7 +23,7 @@ public class CouponService {
         this.eventRepository = eventRepository;
     }
 
-    public Coupon addCouponToEvent(UUID eventId, CouponRequestDTO couponData) {
+    public CouponResponseDTO addCouponToEvent(UUID eventId, CouponRequestDTO couponData) {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new IllegalArgumentException("Event not found"));
 
@@ -32,7 +33,13 @@ public class CouponService {
         coupon.setValid(new Date(couponData.valid()));
         coupon.setEvent(event);
 
-        return couponRepository.save(coupon);
+        Coupon newCoupon = couponRepository.save(coupon);
+
+        return new CouponResponseDTO(
+                newCoupon.getEvent().getId(),
+                newCoupon.getCode(),
+                newCoupon.getDiscount(),
+                newCoupon.getValid());
     }
 
     public List<Coupon> consultCoupons(UUID eventId, Date currentDate) {
