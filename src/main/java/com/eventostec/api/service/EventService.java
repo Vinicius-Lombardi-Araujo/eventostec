@@ -91,7 +91,7 @@ public class EventService {
         city = (city != null) ? city : "";
         uf = (uf != null) ? uf : "";
         startDate = (startDate != null) ? startDate : new Date(0);
-        endDate = (endDate != null) ? endDate : new Date(Long.MAX_VALUE);
+        endDate = (endDate != null) ? endDate : new Date(4102444800000L);
 
         Pageable pageable = PageRequest.of(page, size);
         Page<Event> eventsPage = this.eventRepository.findFilteredEvents(title, city, uf, startDate, endDate, pageable);
