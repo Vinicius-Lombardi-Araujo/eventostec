@@ -1,6 +1,7 @@
 package com.eventostec.api.service;
 
 import com.amazonaws.services.s3.AmazonS3;
+import com.eventostec.api.domain.address.Address;
 import com.eventostec.api.dto.EventRequestDTO;
 import com.eventostec.api.domain.event.Event;
 import com.eventostec.api.dto.EventResponseDTO;
@@ -36,7 +37,7 @@ public class EventService {
         this.s3Client = s3Client;
     }
 
-    public Event createEvent(EventRequestDTO data) {
+    public EventResponseDTO createEvent(EventRequestDTO data) {
         String imgUrl = null;
 
         if(data.image() != null) {
@@ -54,10 +55,19 @@ public class EventService {
         this.eventRepository.save(newEvent);
 
         if(!data.remote()) {
-            this.addressService.createAddress(data, newEvent);
+            Address newAddress = this.addressService.createAddress(data, newEvent);
+            newEvent.setAddress(newAddress);
         }
 
-        return newEvent;
+        return new EventResponseDTO(newEvent.getId(),
+                newEvent.getTitle(),
+                newEvent.getDescription(),
+                newEvent.getDate(),
+                newEvent.getAddress() != null ? newEvent.getAddress().getCity() : "",
+                newEvent.getAddress() != null ? newEvent.getAddress().getUf() : "",
+                newEvent.getRemote(),
+                newEvent.getEventUrl(),
+                newEvent.getImgUrl());
     }
 
     public List<EventResponseDTO> getUpcomingEvents(int page, int size) {
